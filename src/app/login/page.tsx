@@ -12,7 +12,7 @@ export default function LoginPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const SENHA_MESTRA = "ipvp2026"; 
+    const SENHA_MESTRA = "ipvpsec"; 
 
     if (password === SENHA_MESTRA) {
       document.cookie = "ipvp_auth=true; path=/; max-age=86400; SameSite=Strict";
