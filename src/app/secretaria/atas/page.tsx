@@ -109,8 +109,20 @@ export default function SecretariaDigital() {
 
   // Função para baixar o DOCX de forma compatível
   const baixarDocx = () => {
-    const conteudo = `Página: ${pagina}\n\n${gerarTextoPrincipal()}\n\n${gerarRodape()}`;
-    const blob = new Blob([conteudo], { type: 'application/msword' });
+    const conteudo = `<div style="text-align: right; font-size: 12pt; font-weight: bold;">${pagina}</div><br><br>${gerarTextoPrincipal()}<br><br>${gerarRodape().replace(/\n/g, '<br>')}`;
+    const html = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset='utf-8'>
+        <style>
+          @page { size: A4; margin: 3cm 2cm 2cm 3cm; }
+          body { font-family: 'Times New Roman', serif; font-size: 13pt; text-align: justify; line-height: 1.5; }
+        </style>
+      </head>
+      <body>${conteudo}</body>
+      </html>
+    `;
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `Ata_${numero}.doc`;
@@ -178,7 +190,7 @@ export default function SecretariaDigital() {
               </select>
               <div className="flex gap-2">
                 <input type="number" value={numero} onChange={e => setNumero(e.target.value)} className="w-1/2 p-2 border rounded" placeholder="Nº Ata" />
-                <input type="text" value={pagina} onChange={e => setPagina(e.target.value)} className="w-1/2 p-2 border rounded" placeholder="Página" />
+                <input type="text" value={pagina} onChange={e => setPagina(e.target.value)} className="w-1/2 p-2 border rounded" placeholder="Página (ex: 01)" />
               </div>
               <input type="date" value={data} onChange={e => setData(e.target.value)} className="w-full p-2 border rounded" />
               <div className="flex gap-2">
@@ -214,9 +226,9 @@ export default function SecretariaDigital() {
       {/* ÁREA DO DOCUMENTO OFICIAL A4 */}
       <div id="documento-oficial" className="bg-white mx-auto shadow-2xl relative" style={{ width: '210mm', minHeight: '297mm' }}>
         
-        {/* Número da Página no Cabeçalho */}
+        {/* Número da Página no Cabeçalho (Somente o número agora) */}
         <div className="absolute top-[1cm] right-[2cm] font-sans text-[12pt] font-bold">
-          Página: {pagina}
+          {pagina}
         </div>
 
         {/* Corpo do Texto e Linhas */}
