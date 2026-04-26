@@ -107,7 +107,6 @@ export default function SecretariaDigital() {
     return `[1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero}) - Número, data e hora por extenso.\n[2] QUÓRUM - Registro dos presentes (${presentes.length}) e ausências (${ausentes.length}).\n[3] DEVOCIONAL | [4] PAUTA | [5] ENCERRAMENTO.`;
   };
 
-  // Função para baixar o DOCX de forma compatível
   const baixarDocx = () => {
     const conteudo = `<div style="text-align: right; font-size: 12pt; font-weight: bold;">${pagina}</div><br><br>${gerarTextoPrincipal()}<br><br>${gerarRodape().replace(/\n/g, '<br>')}`;
     const html = `
@@ -134,42 +133,34 @@ export default function SecretariaDigital() {
       
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* Esconde absolutamente TUDO que não seja o documento oficial */
+          /* Esconde absolutamente tudo na tela */
           body * { visibility: hidden !important; }
           #documento-oficial, #documento-oficial * { visibility: visible !important; }
           
-          /* Remove margens e fundos do site e da barra lateral */
-          html, body, main, aside, nav, header { 
-            margin: 0 !important; 
-            padding: 0 !important; 
+          /* Reseta o fundo do site */
+          html, body { 
             background: white !important; 
-            width: 100% !important;
-            display: block !important;
+            margin: 0 !important; 
+            padding: 0 !important;
           }
 
-          /* Posiciona o documento no topo absoluto da folha */
+          /* Coloca a folha no topo exato da impressora */
           #documento-oficial { 
             position: absolute !important; 
             left: 0 !important; 
             top: 0 !important; 
             width: 210mm !important; 
+            height: 297mm !important;
             box-shadow: none !important;
+            margin: 0 !important;
           }
 
-          /* Configuração da Página A4 */
-          @page { 
-            size: A4; 
-            margin-top: 3cm; 
-            margin-bottom: 2cm; 
-            margin-left: 3cm; 
-            margin-right: 2cm; 
-          }
-
-          /* Garante que os números das linhas apareçam */
-          .line-num { visibility: visible !important; }
+          /* Tira as margens padrões da impressora, pois nós desenhamos elas no código */
+          @page { size: A4; margin: 0; }
         }
       `}} />
 
+      {/* PAINEL DE CONTROLE (Não aparece na impressão) */}
       <div className="max-w-5xl mx-auto p-4 no-print">
         <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 mb-6 text-black">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
@@ -223,39 +214,46 @@ export default function SecretariaDigital() {
         </div>
       </div>
 
-      {/* ÁREA DO DOCUMENTO OFICIAL A4 */}
-      <div id="documento-oficial" className="bg-white mx-auto shadow-2xl relative" style={{ width: '210mm', minHeight: '297mm' }}>
+      {/* ÁREA DO DOCUMENTO OFICIAL A4 (O que vai pro papel) */}
+      <div id="documento-oficial" className="bg-white mx-auto shadow-2xl relative" style={{ width: '210mm', height: '297mm' }}>
         
-        {/* Número da Página no Cabeçalho (Somente o número agora) */}
-        <div className="absolute top-[1cm] right-[2cm] font-sans text-[12pt] font-bold">
+        {/* Cabeçalho: Número da Página isolado (Tamanho 12, topo direito) */}
+        <div className="absolute top-[1.5cm] right-[2cm] font-sans text-[12pt] font-bold">
           {pagina}
         </div>
 
-        {/* Corpo do Texto e Linhas */}
-        <div className="relative font-serif text-[13pt] text-black text-justify" style={{ lineHeight: '32px', padding: '3cm 2cm 2cm 3cm' }}>
-          
-          {/* Numeração de Linhas na Margem Esquerda */}
-          <div className="absolute left-0 top-[3cm] bottom-[2cm] w-[3cm] text-right pr-4 text-black font-bold opacity-80 z-0">
-            {Array.from({ length: 35 }).map((_, i) => (
-              <div key={i} className="line-num" style={{ height: '32px', lineHeight: '32px' }}>{i + 1}</div>
-            ))}
-          </div>
-
-          {/* O Texto da Ata */}
-          <div className="relative z-10 whitespace-pre-wrap">
-            {gerarTextoPrincipal()}
-            
-            {/* Linhas Contínuas (Somente após o texto) */}
-            <span className="text-slate-300 opacity-50">
-              {Array.from({ length: 400 }).map(() => '_').join('')}
-            </span>
-          </div>
-
-          {/* Rodapé (Tamanho 11, Espaçamento 1.0) */}
-          <div className="mt-8 text-[11pt] leading-[1.0] italic whitespace-pre-wrap">
-            {gerarRodape()}
-          </div>
+        {/* Coluna Lateral Esquerda: Numeração das Linhas */}
+        <div className="absolute left-[0.5cm] top-[3cm] bottom-[5cm] w-[2cm] text-right pr-2 text-black font-bold font-sans opacity-80" style={{ lineHeight: '8mm' }}>
+          {Array.from({ length: 35 }).map((_, i) => (
+            <div key={i}>{i + 1}</div>
+          ))}
         </div>
+
+        {/* Corpo Principal (Texto + Linhas Contínuas de Preenchimento) */}
+        {/* Usamos overflow-hidden para que as linhas não desçam além da área limite */}
+        <div className="absolute left-[3cm] right-[2cm] top-[3cm] bottom-[5cm] overflow-hidden text-justify font-serif text-[13pt] text-black" style={{ lineHeight: '8mm' }}>
+          
+          <span className="whitespace-pre-wrap">
+            {gerarTextoPrincipal()}
+          </span>
+
+          {/* O segredo da Linha Contínua Mágica: 
+              Ela é anexada imediatamente APÓS o texto. Como usamos letter-spacing negativo, 
+              os underscores (underline) formam uma linha sólida preta que flui até encher a página, 
+              mas NUNCA ficam atrás do texto. */}
+          <span className="tracking-tighter">
+            {''.padEnd(3000, '_')}
+          </span>
+
+        </div>
+
+        {/* Rodapé Fixo (Tamanho 11, Espaçamento Simples, preso na margem inferior) */}
+        <div className="absolute left-[3cm] right-[2cm] bottom-[2cm] text-[11pt] leading-[1.0] italic text-justify text-black font-serif">
+          {gerarRodape().split('\n').map((linha, index) => (
+            <p key={index} className="m-0 p-0">{linha}</p>
+          ))}
+        </div>
+
       </div>
     </div>
   );
