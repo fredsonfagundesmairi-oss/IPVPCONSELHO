@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-// Funções para conversão por extenso (essencial para o estilo manuscrito)
+// Funções para conversão por extenso
 const numeroParaExtenso = (n: number, feminino = false) => {
   const unidades = ["zero", feminino ? "uma" : "um", feminino ? "duas" : "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
   const dezenas = ["", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
@@ -39,11 +39,11 @@ export default function SecretariaDigital() {
   const [horaInício, setHoraInício] = useState('');
   const [horaFim, setHoraFim] = useState('');
   
-  // Estrutura de dados por Sociedade
+  // Estrutura de dados
   const configuracoes = {
     Conselho: {
       nome: "Conselho",
-      endereco: "Rua Coronel João Pinho, 91, Centro, Várzea do Poço-BA",
+      endereco: "Avenida Dr. Durval Gama, nº 17, Centro, Várzea do Poço-BA",
       secretario: "Pb. Adevaldo Marques Rios",
       membros: ["Pr. Fredson Fagundes Cerqueira", "Pb. Elique Rios Filho", "Pb. Adevaldo Marques Rios"],
       autoMarcar: true
@@ -60,12 +60,18 @@ export default function SecretariaDigital() {
       endereco: "Avenida Dr. Durval Gama, nº 17, Centro, Várzea do Poço-BA",
       secretario: "Jucirene Lopes da Silva Cunha",
       membros: ["Iradã Rios de Abreu", "Thayz Mota Cunha Franco", "Jucirene Lopes da Silva Cunha", "Elizânia Gonçalves da Silva Rios", "Izabel Mota de Sousa Cunha"],
-      autoMarcar: false // SAF não marca automático conforme pedido
+      autoMarcar: false
     }
   };
 
   const [presentes, setPresentes] = useState<string[]>([]);
-  const [devocional, setDevocional] = useState('');
+  
+  // Novos estados da Devocional
+  const [devocionalDirigente, setDevocionalDirigente] = useState('');
+  const [devocionalLeitura, setDevocionalLeitura] = useState('');
+  const [devocionalLouvor, setDevocionalLouvor] = useState('');
+  const [devocionalOracao, setDevocionalOracao] = useState('');
+  
   const [pautas, setPautas] = useState(['']);
   const [resolucoes, setResolucoes] = useState(['']);
   const [oracaoFinal, setOracaoFinal] = useState('');
@@ -85,7 +91,7 @@ export default function SecretariaDigital() {
     const isSAF = sociedade === 'SAF';
     const sigla = sociedade === 'Conselho' ? 'CONSELHO' : sociedade;
     
-    return `ATA ${numExtenso} (${numero}) DA REUNIÃO DO ${sociedade === 'Conselho' ? 'CONSELHO' : sociedade.toUpperCase()} DA IGREJA PRESBITERIANA DE VÁRZEA DO POÇO – BA[1]. Aos ${dataExtenso}, às ${horaExtenso}, reuniu-se o ${config.nome} (${sigla}) da Igreja Presbiteriana de Várzea do Poço – BA, no templo situado à ${config.endereco}. QUÓRUM[2]: Procedida a verificação de quórum, constatou-se a presença de: ${presentes.join('; ')}. Ficando assim caracterizado o quórum regimental para a realização dos trabalhos. DEVOCIONAL[3]: A devocional foi conduzida pel${isSAF ? 'a' : 'o'} Presidente, com a leitura bíblica em ${devocional || '__________'}. Em seguida, a presidência passou a palavra ao secretário para a leitura da ata anterior, a qual foi aprovada. PAUTA E RESOLUÇÕES[4]: Passou-se às pautas e deliberações: ${pautas.map((p, i) => `${i + 1}- ${p}. Resolução: ${resolucoes[i]}`).join('; ')}. ENCERRAMENTO[5]: Nada mais havendo a tratar, a reunião foi encerrada às ${horaFimExtenso}, com oração proferida por ${oracaoFinal || '__________'}. Eu, ${config.secretario}, lavrei a presente ata, que será devidamente assinada.`;
+    return `ATA ${numExtenso} (${numero}) DA REUNIÃO DO ${sociedade === 'Conselho' ? 'CONSELHO' : sociedade.toUpperCase()} DA IGREJA PRESBITERIANA DE VÁRZEA DO POÇO – BA[1]. Aos ${dataExtenso}, às ${horaExtenso}, reuniu-se o ${config.nome} (${sigla}) da Igreja Presbiteriana de Várzea do Poço – BA, no templo situado à ${config.endereco}. QUÓRUM[2]: Procedida a verificação de quórum, constatou-se a presença de: ${presentes.join('; ')}. Ficando assim caracterizado o quórum regimental para a realização dos trabalhos. DEVOCIONAL[3]: A devocional foi conduzida por ${devocionalDirigente || '__________'}, com a leitura bíblica em ${devocionalLeitura || '__________'}, entoando-se os louvores ${devocionalLouvor || '__________'} e oração proferida por ${devocionalOracao || '__________'}. Em seguida, a presidência passou a palavra ao secretário para a leitura da ata anterior, a qual foi aprovada. PAUTA E RESOLUÇÕES[4]: Passou-se às pautas e deliberações: ${pautas.map((p, i) => `${i + 1}- ${p}. Resolução: ${resolucoes[i]}`).join('; ')}. ENCERRAMENTO[5]: Nada mais havendo a tratar, a reunião foi encerrada às ${horaFimExtenso}, com oração proferida por ${oracaoFinal || '__________'}. Eu, ${config.secretario}, lavrei a presente ata, que será devidamente assinada.`;
   };
 
   const gerarRodape = () => {
@@ -93,7 +99,7 @@ export default function SecretariaDigital() {
 ____________________________________________________
 [1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero}) - Número, data e hora da reunião por extenso.
 [2] QUÓRUM - Registro dos presentes e verificação de legalidade.
-[3] DEVOCIONAL - Momento de leitura da Palavra e oração inicial.
+[3] DEVOCIONAL - Dirigente, leitura bíblica, louvores e oração.
 [4] PAUTA E RESOLUÇÕES - Itens discutidos e decisões tomadas.
 [5] ENCERRAMENTO - Horário de término e registro da assinatura.`;
   };
@@ -107,15 +113,16 @@ ____________________________________________________
           <div className="flex justify-between items-center mb-6 border-b pb-4 text-black">
             <h1 className="text-xl font-bold">Escrivão Digital IPVP</h1>
             <div className="space-x-2">
-              <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg">Imprimir PDF</button>
+              <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Imprimir PDF</button>
               <button onClick={() => {
                 navigator.clipboard.writeText(gerarTextoPrincipal() + "\n" + gerarRodape());
                 alert("Texto copiado!");
-              }} className="bg-slate-800 text-white px-4 py-2 rounded-lg">Copiar Texto</button>
+              }} className="bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition">Copiar Texto</button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-black">
+            {/* Coluna 1: Dados */}
             <div className="space-y-4">
               <h2 className="font-bold text-blue-700 text-xs">DADOS BÁSICOS</h2>
               <select value={sociedade} onChange={e => setSociedade(e.target.value)} className="w-full p-2 border rounded bg-slate-50">
@@ -126,11 +133,12 @@ ____________________________________________________
               <input type="number" value={numero} onChange={e => setNumero(e.target.value)} className="w-full p-2 border rounded" placeholder="Nº da Ata" />
               <input type="date" value={data} onChange={e => setData(e.target.value)} className="w-full p-2 border rounded" />
               <div className="flex gap-2">
-                <input type="time" value={horaInício} onChange={e => setHoraInício(e.target.value)} className="w-1/2 p-2 border rounded" />
-                <input type="time" value={horaFim} onChange={e => setHoraFim(e.target.value)} className="w-1/2 p-2 border rounded" />
+                <input type="time" value={horaInício} onChange={e => setHoraInício(e.target.value)} className="w-1/2 p-2 border rounded" title="Hora de Início" />
+                <input type="time" value={horaFim} onChange={e => setHoraFim(e.target.value)} className="w-1/2 p-2 border rounded" title="Hora de Término" />
               </div>
             </div>
 
+            {/* Coluna 2: Presenças */}
             <div className="space-y-4">
               <h2 className="font-bold text-blue-700 text-xs">PRESENÇAS ({sociedade})</h2>
               <div className="max-h-48 overflow-y-auto space-y-1 border p-2 rounded">
@@ -144,14 +152,21 @@ ____________________________________________________
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="font-bold text-blue-700 text-xs">DEVOCIONAL E ENCERRAMENTO</h2>
-              <input placeholder="Leitura Bíblica (ex: Sl 23)" value={devocional} onChange={e => setDevocional(e.target.value)} className="w-full p-2 border text-sm rounded" />
-              <input placeholder="Quem orou no fim?" value={oracaoFinal} onChange={e => setOracaoFinal(e.target.value)} className="w-full p-2 border text-sm rounded" />
+            {/* Coluna 3: Devocional e Encerramento */}
+            <div className="space-y-2">
+              <h2 className="font-bold text-blue-700 text-xs">DEVOCIONAL</h2>
+              <input placeholder="Quem conduziu a devocional?" value={devocionalDirigente} onChange={e => setDevocionalDirigente(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              <input placeholder="Qual o texto lido? (ex: Sl 23)" value={devocionalLeitura} onChange={e => setDevocionalLeitura(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              <input placeholder="Músicas ou hinos cantados?" value={devocionalLouvor} onChange={e => setDevocionalLouvor(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              <input placeholder="Quem orou no final da devocional?" value={devocionalOracao} onChange={e => setDevocionalOracao(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              
+              <h2 className="font-bold text-blue-700 text-xs mt-4">ENCERRAMENTO</h2>
+              <input placeholder="Quem orou no encerramento da reunião?" value={oracaoFinal} onChange={e => setOracaoFinal(e.target.value)} className="w-full p-2 border text-sm rounded" />
             </div>
           </div>
 
-          <div className="mt-6 text-black">
+          {/* Seção Inferior: Pautas */}
+          <div className="mt-6 text-black border-t pt-4">
              <h2 className="font-bold text-blue-700 text-xs mb-2 uppercase">Assuntos da Reunião</h2>
              {pautas.map((_, i) => (
                <div key={i} className="flex gap-2 mb-2">
