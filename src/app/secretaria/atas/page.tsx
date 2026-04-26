@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { Document, Packer, Paragraph, TextRun, AlignmentType, Footer } from "docx";
+import { saveAs } from "file-saver";
 
-// Funções de conversão por extenso (Padrão de Atas)
+// Funções de conversão por extenso
 const numeroParaExtenso = (n: number, feminino = false) => {
   const unidades = ["zero", feminino ? "uma" : "um", feminino ? "duas" : "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
   const dezenas = ["", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
@@ -100,34 +102,65 @@ export default function SecretariaDigital() {
     const secretario = sociedade === 'SAF' ? 'Jucirene Lopes da Silva Cunha' : 'Adevaldo Marques Rios';
     const cargoSec = sociedade === 'SAF' ? 'Primeira Secretária' : 'Secretário';
 
-    return `ATA ${numExtenso} (${numero}) DA REUNIÃO DO ${sociedade.toUpperCase()} DA IGREJA PRESBITERIANA DE VÁRZEA DO POÇO – BA. Aos ${dataExtenso}, às ${horaExtenso}, reuniu-se o ${sociedade === 'Conselho' ? 'Conselho' : sociedade} da Igreja Presbiteriana de Várzea do Poço – BA, no templo situado à Avenida Dr. Durval Gama, nº 17, Centro. QUÓRUM: ${quorumText} Ficando assim caracterizado o quórum regimental para a realização dos trabalhos. DEVOCIONAL: A devocional foi conduzida por ${devocionalDirigente || '__________'}, com a leitura bíblica em ${devocionalLeitura || '__________'}, entoando-se os louvores ${devocionalLouvor || '__________'} e oração proferida por ${devocionalOracao || '__________'}. Em seguida, a presidência passou a palavra ao secretário para a leitura da ata anterior, a qual foi aprovada. PAUTA E RESOLUÇÕES: Passou-se às pautas e deliberações: ${pautas.map((p, i) => `${i + 1}- ${p}. Resolução: ${resolucoes[i]}`).join('; ')}. ENCERRAMENTO: Nada mais havendo a tratar, a reunião foi encerrada às ${horaPorExtenso(horaFim)}, com oração proferida por ${oracaoFinal || '__________'}. Eu, ${secretario}, ${cargoSec}, lavrei a presente ata, que será devidamente assinada. `;
+    return `ATA ${numExtenso} (${numero}) DA REUNIÃO DO ${sociedade.toUpperCase()} DA IGREJA PRESBITERIANA DE VÁRZEA DO POÇO – BA. Aos ${dataExtenso}, às ${horaExtenso}, reuniu-se o ${sociedade === 'Conselho' ? 'Conselho' : sociedade} da Igreja Presbiteriana de Várzea do Poço – BA, no templo situado à Avenida Dr. Durval Gama, nº 17, Centro. QUÓRUM: ${quorumText} Ficando assim caracterizado o quórum regimental para a realização dos trabalhos. DEVOCIONAL: A devocional foi conduzida por ${devocionalDirigente || '__________'}, com a leitura bíblica em ${devocionalLeitura || '__________'}, entoando-se os louvores ${devocionalLouvor || '__________'} e oração proferida por ${devocionalOracao || '__________'}. Em seguida, a presidência passou a palavra ao secretário para a leitura da ata anterior, a qual foi aprovada. PAUTA E RESOLUÇÕES: Passou-se às pautas e deliberações: ${pautas.map((p, i) => `${i + 1}- ${p}. Resolução: ${resolucoes[i]}`).join('; ')}. ENCERRAMENTO: Nada mais havendo a tratar, a reunião foi encerrada às ${horaPorExtenso(horaFim)}, com oração proferida por ${oracaoFinal || '__________'}. Eu, ${secretario}, ${cargoSec}, lavrei a presente ata, que será devidamente assinada.`;
+  };
+
+  const exportarWord = () => {
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: { margin: { top: "3cm", left: "3cm", right: "2cm", bottom: "2cm" } }
+        },
+        children: [
+          new Paragraph({
+            children: [new TextRun({ text: gerarTextoPrincipal(), size: "13pt", font: "Times New Roman" })],
+            alignment: AlignmentType.JUSTIFIED,
+            spacing: { line: 480 } // Aproximadamente 1.5 de espaçamento
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: "________________________________________________________________________________________________________________________________________________________________________", color: "888888" })],
+          })
+        ],
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                children: [new TextRun({ text: `[1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero})\n[2] QUÓRUM (${presentes.length} presentes)\n[3] DEVOCIONAL\n[4] PAUTA\n[5] ENCERRAMENTO`, size: "11pt", font: "Times New Roman", italic: true })],
+                alignment: AlignmentType.JUSTIFIED,
+              })
+            ]
+          })
+        }
+      }]
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, `Ata_${numero}_${sociedade}.docx`);
+    });
   };
 
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white text-black">
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          @page { size: A4; margin-top: 3cm; margin-bottom: 2cm; margin-left: 3cm; margin-right: 2cm; }
-          body { background: white !important; }
-          .no-print { display: none !important; }
-          .print-area { 
-            position: relative; 
-            width: 100%; 
-            height: 100%; 
-            box-shadow: none !important;
+          /* Esconde absolutamente TUDO da página, inclusive o que está fora deste componente */
+          html, body { background: white !important; height: auto !important; overflow: visible !important; }
+          header, nav, aside, footer, .no-print, [class*="sidebar"], [class*="navbar"] { display: none !important; width: 0 !important; height: 0 !important; }
+          
+          /* Garante que apenas o #documento-oficial seja impresso */
+          #documento-oficial { 
+            display: block !important;
+            visibility: visible !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
             padding: 0 !important;
           }
-          .line-number { font-weight: bold; font-family: sans-serif; position: absolute; left: -2.5cm; width: 2cm; text-align: center; }
-          .footer-print { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            font-size: 11pt; 
-            line-height: 1.0; 
-            text-align: justify;
-            font-family: serif;
-            font-style: italic;
-          }
+          
+          @page { size: A4; margin-top: 3cm; margin-bottom: 2cm; margin-left: 3cm; margin-right: 2cm; }
+          .line-number { display: block !important; position: absolute; left: -2.5cm; width: 2cm; text-align: center; font-weight: bold; }
         }
       `}} />
 
@@ -137,8 +170,10 @@ export default function SecretariaDigital() {
             <h1 className="text-xl font-bold">Escrivão Digital IPVP</h1>
             <div className="space-x-2">
               <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">🖨️ Imprimir Ata</button>
+              <button onClick={exportarWord} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">📄 Exportar DOCX</button>
             </div>
           </div>
+          {/* ... (campos de entrada permanecem iguais) ... */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-4">
               <h2 className="font-bold text-blue-700 text-xs uppercase">Dados</h2>
@@ -147,7 +182,7 @@ export default function SecretariaDigital() {
                 <option value="UPH">UPH</option>
                 <option value="SAF">SAF</option>
               </select>
-              <input type="number" value={numero} onChange={e => setNumero(e.target.value)} className="w-full p-2 border rounded" placeholder="Ata Nº" />
+              <input type="number" value={numero} onChange={e => setNumero(e.target.value)} className="w-full p-2 border rounded" />
               <input type="date" value={data} onChange={e => setData(e.target.value)} className="w-full p-2 border rounded" />
               <div className="flex gap-2">
                 <input type="time" value={horaInício} onChange={e => setHoraInício(e.target.value)} className="w-1/2 p-2 border rounded" />
@@ -189,37 +224,24 @@ export default function SecretariaDigital() {
       </div>
 
       {/* ÁREA DE IMPRESSÃO OFICIAL */}
-      <div className="print-area bg-white mx-auto shadow-2xl relative overflow-hidden" style={{ width: '210mm', minHeight: '297mm', padding: '0mm' }}>
-        
-        {/* Camada do Texto e das Linhas Contínuas */}
+      <div id="documento-oficial" className="bg-white mx-auto shadow-2xl relative overflow-hidden" style={{ width: '210mm', minHeight: '297mm' }}>
         <div className="relative font-serif text-[13pt] text-black text-justify" style={{ lineHeight: '30px', margin: '3cm 2cm 2cm 3cm' }}>
-          
-          {/* Loop para gerar 30 linhas com numeração e traços se estiver vazio */}
           {Array.from({ length: 30 }).map((_, i) => (
             <div key={i} className="relative w-full" style={{ height: '30px' }}>
-              <span className="line-number no-print md:block hidden" style={{ position: 'absolute', left: '-2.5cm', width: '2cm', textAlign: 'center', fontWeight: 'bold' }}>{i + 1}</span>
-              <span className="only-print" style={{ position: 'absolute', left: '-2.5cm', width: '2cm', textAlign: 'center', fontWeight: 'bold' }}>{i + 1}</span>
-              
-              {/* Esta camada simula o preenchimento das linhas que não têm texto */}
-              <div className="absolute inset-0 pointer-events-none text-slate-300 opacity-50 z-0">
+              <span className="line-number" style={{ display: 'none' }}>{i + 1}</span>
+              <div className="absolute inset-0 pointer-events-none text-slate-200 opacity-50 z-0">
                 ________________________________________________________________________________________
               </div>
             </div>
           ))}
-
-          {/* O Texto real sobreposto às linhas para garantir alinhamento */}
           <div className="absolute top-0 left-0 right-0 z-10 whitespace-pre-wrap">
             {gerarTextoPrincipal()}
           </div>
         </div>
-
-        {/* Rodapé fixo na margem inferior padrão */}
-        <div className="footer-print p-[10px]" style={{ margin: '0 2cm 2cm 3cm' }}>
+        <div className="absolute bottom-[2cm] left-[3cm] right-[2cm] font-serif italic text-[11pt] leading-[1.0]">
           <p>[1] ATA nº {numeroParaExtenso(parseInt(numero))} ({numero}) - Nº, data e hora por extenso.</p>
-          <p>[2] QUÓRUM - Registro dos presentes ({numeroParaExtenso(presentes.length)}) e ausências ({numeroParaExtenso(ausentes.length)}).</p>
-          <p>[3] DEVOCIONAL - Liturgia, leitura e oração inicial.</p>
-          <p>[4] PAUTA E RESOLUÇÕES - Discussões e decisões.</p>
-          <p>[5] ENCERRAMENTO - Horário e oração final.</p>
+          <p>[2] QUÓRUM - Registro dos presentes ({presentes.length}) e ausências ({ausentes.length}).</p>
+          <p>[3] DEVOCIONAL | [4] PAUTA | [5] ENCERRAMENTO.</p>
         </div>
       </div>
     </div>
