@@ -108,6 +108,7 @@ export default function SecretariaDigital() {
   };
 
   const baixarDocx = () => {
+    // DOCX atualizado para fonte 12pt e espaçamento 1.5
     const conteudo = `<div style="text-align: right; font-size: 12pt; font-weight: bold;">${pagina}</div><br><br>${gerarTextoPrincipal()}<br><br>${gerarRodape().replace(/\n/g, '<br>')}`;
     const html = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -115,7 +116,7 @@ export default function SecretariaDigital() {
         <meta charset='utf-8'>
         <style>
           @page { size: A4; margin: 3cm 2cm 2cm 3cm; }
-          body { font-family: 'Times New Roman', serif; font-size: 13pt; text-align: justify; line-height: 1.5; }
+          body { font-family: 'Times New Roman', serif; font-size: 12pt; text-align: justify; line-height: 1.5; }
         </style>
       </head>
       <body>${conteudo}</body>
@@ -205,7 +206,6 @@ export default function SecretariaDigital() {
             </div>
           </div>
 
-          {/* O BLOCO DE PAUTAS VOLTOU PARA CÁ! */}
           <div className="mt-6 border-t pt-4 text-black">
              <h2 className="font-bold text-blue-700 text-xs mb-2 uppercase">Pautas e Resoluções</h2>
              {pautas.map((_, i) => (
@@ -231,28 +231,28 @@ export default function SecretariaDigital() {
           {pagina}
         </div>
 
-        {/* Coluna Lateral Esquerda: Numeração das Linhas - Limitado exato a 27 linhas para não cruzar o rodapé */}
-        <div className="absolute left-[0.5cm] top-[3cm] bottom-[5.1cm] w-[2cm] text-right pr-2 text-black font-bold font-sans opacity-80 overflow-hidden" style={{ lineHeight: '8mm' }}>
-          {Array.from({ length: 27 }).map((_, i) => (
-            <div key={i}>{i + 1}</div>
+        {/* Coluna Lateral Esquerda: Numeração das Linhas adaptada para Fonte 12 e Espaçamento 1.5 */}
+        <div className="absolute left-[0.5cm] top-[3cm] bottom-[5.1cm] w-[2cm] text-right pr-2 text-black font-bold font-sans opacity-80 overflow-hidden" style={{ fontSize: '12pt', lineHeight: '1.5' }}>
+          {/* Agora cabem 34 linhas na página com esse novo espaçamento */}
+          {Array.from({ length: 34 }).map((_, i) => (
+            <div key={i} style={{ height: '1.5em' }}>{i + 1}</div>
           ))}
         </div>
 
-        {/* Corpo Principal (Texto + Linhas Contínuas de Preenchimento) */}
-        <div className="absolute left-[3cm] right-[2cm] top-[3cm] bottom-[5.1cm] overflow-hidden text-justify font-serif text-[13pt] text-black" style={{ lineHeight: '8mm' }}>
+        {/* Corpo Principal: Fonte 12pt, Espaçamento 1.5 */}
+        <div className="absolute left-[3cm] right-[2cm] top-[3cm] bottom-[5.1cm] overflow-hidden text-justify font-serif text-black" style={{ fontSize: '12pt', lineHeight: '1.5' }}>
           
           <span className="whitespace-pre-wrap">
             {gerarTextoPrincipal()}
           </span>
 
-          {/* O uso do break-all garante que a linha de preenchimento desça acompanhando a quebra do texto */}
           <span className="break-all tracking-tighter">
             {''.padEnd(3000, '_')}
           </span>
 
         </div>
 
-        {/* Rodapé Fixo - Fonte normal (não itálico), ajustada, tam 11 */}
+        {/* Rodapé Fixo - Fonte normal, tamanho 11, espaçamento 1.0 */}
         <div className="absolute left-[3cm] right-[2cm] bottom-[2cm] text-[11pt] leading-tight text-justify text-black font-serif font-normal not-italic">
           {gerarRodape().split('\n').map((linha, index) => (
             <p key={index} className="m-0 p-0">{linha}</p>
