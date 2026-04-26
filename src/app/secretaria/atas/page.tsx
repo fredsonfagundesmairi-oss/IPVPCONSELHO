@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, Footer } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, Footer, PageOrientation } from "docx";
 import { saveAs } from "file-saver";
 
-// Funções de conversão por extenso
+// Conversão por extenso
 const numeroParaExtenso = (n: number, feminino = false) => {
   const unidades = ["zero", feminino ? "uma" : "um", feminino ? "duas" : "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
   const dezenas = ["", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
@@ -115,17 +115,17 @@ export default function SecretariaDigital() {
           new Paragraph({
             children: [new TextRun({ text: gerarTextoPrincipal(), size: "13pt", font: "Times New Roman" })],
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { line: 480 } // Aproximadamente 1.5 de espaçamento
+            spacing: { line: 480 }
           }),
           new Paragraph({
-            children: [new TextRun({ text: "________________________________________________________________________________________________________________________________________________________________________", color: "888888" })],
+            children: [new TextRun({ text: "________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________", color: "888888" })],
           })
         ],
         footers: {
           default: new Footer({
             children: [
               new Paragraph({
-                children: [new TextRun({ text: `[1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero})\n[2] QUÓRUM (${presentes.length} presentes)\n[3] DEVOCIONAL\n[4] PAUTA\n[5] ENCERRAMENTO`, size: "11pt", font: "Times New Roman", italic: true })],
+                children: [new TextRun({ text: `[1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero})\n[2] QUÓRUM (${presentes.length} presentes)\n[3] DEVOCIONAL | [4] PAUTA | [5] ENCERRAMENTO`, size: "11pt", font: "Times New Roman", italic: true })],
                 alignment: AlignmentType.JUSTIFIED,
               })
             ]
@@ -133,34 +133,18 @@ export default function SecretariaDigital() {
         }
       }]
     });
-
-    Packer.toBlob(doc).then(blob => {
-      saveAs(blob, `Ata_${numero}_${sociedade}.docx`);
-    });
+    Packer.toBlob(doc).then(blob => { saveAs(blob, `Ata_${numero}.docx`); });
   };
 
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white text-black">
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* Esconde absolutamente TUDO da página, inclusive o que está fora deste componente */
-          html, body { background: white !important; height: auto !important; overflow: visible !important; }
-          header, nav, aside, footer, .no-print, [class*="sidebar"], [class*="navbar"] { display: none !important; width: 0 !important; height: 0 !important; }
-          
-          /* Garante que apenas o #documento-oficial seja impresso */
-          #documento-oficial { 
-            display: block !important;
-            visibility: visible !important;
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          
+          body * { visibility: hidden; }
+          #documento-oficial, #documento-oficial * { visibility: visible; }
+          #documento-oficial { position: absolute; left: 0; top: 0; width: 100%; }
           @page { size: A4; margin-top: 3cm; margin-bottom: 2cm; margin-left: 3cm; margin-right: 2cm; }
-          .line-number { display: block !important; position: absolute; left: -2.5cm; width: 2cm; text-align: center; font-weight: bold; }
+          .no-print { display: none !important; }
         }
       `}} />
 
@@ -169,53 +153,56 @@ export default function SecretariaDigital() {
           <div className="flex justify-between items-center mb-6 border-b pb-4">
             <h1 className="text-xl font-bold">Escrivão Digital IPVP</h1>
             <div className="space-x-2">
-              <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">🖨️ Imprimir Ata</button>
-              <button onClick={exportarWord} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">📄 Exportar DOCX</button>
+              <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">🖨️ Imprimir</button>
+              <button onClick={exportarWord} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">📄 DOCX</button>
             </div>
           </div>
-          {/* ... (campos de entrada permanecem iguais) ... */}
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-4">
-              <h2 className="font-bold text-blue-700 text-xs uppercase">Dados</h2>
-              <select value={sociedade} onChange={e => setSociedade(e.target.value)} className="w-full p-2 border rounded bg-slate-50">
+              <h2 className="font-bold text-blue-700 text-xs uppercase text-black">Dados</h2>
+              <select value={sociedade} onChange={e => setSociedade(e.target.value)} className="w-full p-2 border rounded bg-slate-50 text-black">
                 <option value="Conselho">Conselho</option>
                 <option value="UPH">UPH</option>
                 <option value="SAF">SAF</option>
               </select>
-              <input type="number" value={numero} onChange={e => setNumero(e.target.value)} className="w-full p-2 border rounded" />
-              <input type="date" value={data} onChange={e => setData(e.target.value)} className="w-full p-2 border rounded" />
+              <input type="number" value={numero} onChange={e => setNumero(e.target.value)} className="w-full p-2 border rounded text-black" />
+              <input type="date" value={data} onChange={e => setData(e.target.value)} className="w-full p-2 border rounded text-black" />
               <div className="flex gap-2">
-                <input type="time" value={horaInício} onChange={e => setHoraInício(e.target.value)} className="w-1/2 p-2 border rounded" />
-                <input type="time" value={horaFim} onChange={e => setHoraFim(e.target.value)} className="w-1/2 p-2 border rounded" />
+                <input type="time" value={horaInício} onChange={e => setHoraInício(e.target.value)} className="w-1/2 p-2 border rounded text-black" />
+                <input type="time" value={horaFim} onChange={e => setHoraFim(e.target.value)} className="w-1/2 p-2 border rounded text-black" />
               </div>
             </div>
+
             <div className="space-y-4">
-              <h2 className="font-bold text-blue-700 text-xs uppercase">Presenças</h2>
-              <input type="text" value={buscaPres} onChange={e => setBuscaPres(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMembro('pres', buscaPres)} placeholder="Buscar presente..." className="w-full p-2 text-sm border rounded" />
+              <h2 className="font-bold text-blue-700 text-xs uppercase text-black">Presenças</h2>
+              <input type="text" value={buscaPres} onChange={e => setBuscaPres(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMembro('pres', buscaPres)} placeholder="Buscar presente..." className="w-full p-2 text-sm border rounded text-black" />
               <div className="flex flex-wrap gap-1">
                 {presentes.map(n => <span key={n} className="bg-blue-100 text-blue-800 text-[10px] px-2 py-1 rounded flex items-center">{n} <button onClick={() => setPresentes(presentes.filter(x => x !== n))} className="ml-1 font-bold">×</button></span>)}
               </div>
-              <h2 className="font-bold text-red-700 text-xs uppercase">Ausentes</h2>
-              <input type="text" value={buscaAus} onChange={e => setBuscaAus(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMembro('aus', buscaAus)} placeholder="Buscar ausente..." className="w-full p-2 text-sm border rounded" />
+              <h2 className="font-bold text-red-700 text-xs uppercase text-black text-black">Ausentes</h2>
+              <input type="text" value={buscaAus} onChange={e => setBuscaAus(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMembro('aus', buscaAus)} placeholder="Buscar ausente..." className="w-full p-2 text-sm border rounded text-black" />
               <div className="flex flex-wrap gap-1">
                 {ausentes.map(n => <span key={n} className="bg-red-100 text-red-800 text-[10px] px-2 py-1 rounded flex items-center">{n} <button onClick={() => setAusentes(ausentes.filter(x => x !== n))} className="ml-1 font-bold">×</button></span>)}
               </div>
             </div>
+
             <div className="space-y-2">
-              <h2 className="font-bold text-blue-700 text-xs uppercase">Devocional</h2>
+              <h2 className="font-bold text-blue-700 text-xs uppercase text-black">Devocional</h2>
               {renderCampoInteligente(devocionalDirigente, setDevocionalDirigente, "Dirigente")}
-              <input placeholder="Texto Bíblico" value={devocionalLeitura} onChange={e => setDevocionalLeitura(e.target.value)} className="w-full p-2 border text-sm rounded" />
-              <input placeholder="Hinos" value={devocionalLouvor} onChange={e => setDevocionalLouvor(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              <input placeholder="Texto Bíblico" value={devocionalLeitura} onChange={e => setDevocionalLeitura(e.target.value)} className="w-full p-2 border text-sm rounded text-black" />
+              <input placeholder="Hinos" value={devocionalLouvor} onChange={e => setDevocionalLouvor(e.target.value)} className="w-full p-2 border text-sm rounded text-black" />
               {renderCampoInteligente(devocionalOracao, setDevocionalOracao, "Oração Devocional")}
-              <h2 className="font-bold text-blue-700 text-xs mt-2 uppercase">Fim</h2>
+              <h2 className="font-bold text-blue-700 text-xs mt-2 uppercase text-black">Fim</h2>
               {renderCampoInteligente(oracaoFinal, setOracaoFinal, "Oração Final")}
             </div>
           </div>
+
           <div className="mt-4 border-t pt-4">
              {pautas.map((_, i) => (
                <div key={i} className="flex gap-2 mb-2">
-                 <input placeholder={`Pauta ${i+1}`} value={pautas[i]} onChange={e => { const n = [...pautas]; n[i] = e.target.value; setPautas(n); }} className="w-1/2 p-2 border rounded text-sm" />
-                 <input placeholder={`Resolução ${i+1}`} value={resolucoes[i]} onChange={e => { const n = [...resolucoes]; n[i] = e.target.value; setResolucoes(n); }} className="w-1/2 p-2 border rounded text-sm" />
+                 <input placeholder={`Pauta ${i+1}`} value={pautas[i]} onChange={e => { const n = [...pautas]; n[i] = e.target.value; setPautas(n); }} className="w-1/2 p-2 border rounded text-sm text-black" />
+                 <input placeholder={`Resolução ${i+1}`} value={resolucoes[i]} onChange={e => { const n = [...resolucoes]; n[i] = e.target.value; setResolucoes(n); }} className="w-1/2 p-2 border rounded text-sm text-black" />
                </div>
              ))}
              <button onClick={() => { setPautas([...pautas, '']); setResolucoes([...resolucoes, '']); }} className="text-blue-600 text-xs font-bold">+ Adicionar Assunto</button>
@@ -223,22 +210,17 @@ export default function SecretariaDigital() {
         </div>
       </div>
 
-      {/* ÁREA DE IMPRESSÃO OFICIAL */}
       <div id="documento-oficial" className="bg-white mx-auto shadow-2xl relative overflow-hidden" style={{ width: '210mm', minHeight: '297mm' }}>
         <div className="relative font-serif text-[13pt] text-black text-justify" style={{ lineHeight: '30px', margin: '3cm 2cm 2cm 3cm' }}>
           {Array.from({ length: 30 }).map((_, i) => (
             <div key={i} className="relative w-full" style={{ height: '30px' }}>
-              <span className="line-number" style={{ display: 'none' }}>{i + 1}</span>
-              <div className="absolute inset-0 pointer-events-none text-slate-200 opacity-50 z-0">
-                ________________________________________________________________________________________
-              </div>
+              <span className="absolute left-[-2.5cm] w-[2cm] text-center font-bold font-sans">{i + 1}</span>
+              <div className="absolute inset-0 pointer-events-none text-slate-200 opacity-50 z-0">________________________________________________________________________________________</div>
             </div>
           ))}
-          <div className="absolute top-0 left-0 right-0 z-10 whitespace-pre-wrap">
-            {gerarTextoPrincipal()}
-          </div>
+          <div className="absolute top-0 left-0 right-0 z-10 whitespace-pre-wrap">{gerarTextoPrincipal()}</div>
         </div>
-        <div className="absolute bottom-[2cm] left-[3cm] right-[2cm] font-serif italic text-[11pt] leading-[1.0]">
+        <div className="absolute bottom-[2cm] left-[3cm] right-[2cm] font-serif italic text-[11pt] leading-[1.0] text-black">
           <p>[1] ATA nº {numeroParaExtenso(parseInt(numero))} ({numero}) - Nº, data e hora por extenso.</p>
           <p>[2] QUÓRUM - Registro dos presentes ({presentes.length}) e ausências ({ausentes.length}).</p>
           <p>[3] DEVOCIONAL | [4] PAUTA | [5] ENCERRAMENTO.</p>
