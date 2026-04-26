@@ -49,11 +49,9 @@ export default function SecretariaDigital() {
   const [horaInício, setHoraInício] = useState('');
   const [horaFim, setHoraFim] = useState('');
 
-  // Estados das listas em formato de Array ("Etiquetas")
   const [presentes, setPresentes] = useState<string[]>([]);
   const [ausentes, setAusentes] = useState<string[]>([]);
   
-  // Termos de busca digitados
   const [buscaPres, setBuscaPres] = useState('');
   const [buscaAus, setBuscaAus] = useState('');
 
@@ -65,7 +63,6 @@ export default function SecretariaDigital() {
   const [resolucoes, setResolucoes] = useState(['']);
   const [oracaoFinal, setOracaoFinal] = useState('');
 
-  // Auto-preencher Conselho
   useEffect(() => {
     if (sociedade === 'Conselho') {
       setPresentes(["Pr. Fredson Fagundes Cerqueira", "Pb. Elique Rios Filho", "Pb. Adevaldo Marques Rios"]);
@@ -92,9 +89,7 @@ export default function SecretariaDigital() {
     if (tipo === 'aus') setAusentes(ausentes.filter(n => n !== nome));
   };
 
-  // Função para criar o campo inteligente de busca rápida (apenas 1 nome)
   const renderCampoInteligente = (valor: string, setValor: (v: string) => void, placeholder: string) => {
-    // Só mostra a lista se tiver 3 letras ou mais E se o nome ainda não estiver completo igualzinho à lista
     const mostrarLista = valor.length >= 3 && !membrosIgreja.includes(valor);
     const resultados = membrosIgreja.filter(m => m.toLowerCase().includes(valor.toLowerCase()));
 
@@ -110,11 +105,7 @@ export default function SecretariaDigital() {
         {mostrarLista && resultados.length > 0 && (
           <ul className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border shadow-xl z-20 rounded">
             {resultados.map(m => (
-              <li 
-                key={m} 
-                onClick={() => setValor(m)} 
-                className="p-2 text-sm hover:bg-blue-100 cursor-pointer border-b"
-              >
+              <li key={m} onClick={() => setValor(m)} className="p-2 text-sm hover:bg-blue-100 cursor-pointer border-b">
                 {m}
               </li>
             ))}
@@ -141,8 +132,7 @@ export default function SecretariaDigital() {
   };
 
   const gerarRodape = () => {
-    return `____________________________________________________
-[1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero}) - Número, data e hora da reunião por extenso.
+    return `[1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero}) - Número, data e hora da reunião por extenso.
 [2] QUÓRUM - Registro dos presentes (${numeroParaExtenso(presentes.length)}) e ausências (${numeroParaExtenso(ausentes.length)}).
 [3] DEVOCIONAL - Momento de liturgia, leitura e oração.
 [4] PAUTA E RESOLUÇÕES - Itens discutidos e decisões tomadas.
@@ -150,14 +140,27 @@ export default function SecretariaDigital() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-100 print:bg-white text-black font-sans">
+      
+      {/* Estilo CSS exclusivo para garantir que a impressão fique perfeita */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
+          .no-print { display: none !important; }
+          .only-print { display: block !important; }
+          @page { size: A4; margin: 20mm; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+      `}} />
+
+      <div className="max-w-5xl mx-auto p-4 md:p-8 print:p-0 space-y-6">
         
-        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 print:hidden text-black">
+        {/* Painel de Edição - Oculto na Impressão (.no-print) */}
+        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 no-print">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
             <h1 className="text-xl font-bold">Escrivão Digital IPVP</h1>
             <div className="space-x-2">
-              <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Imprimir PDF</button>
+              <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">🖨️ Imprimir Ata Oficial</button>
               <button onClick={() => {
                 navigator.clipboard.writeText(gerarTextoPrincipal() + "\n\n" + gerarRodape());
                 alert("Ata copiada!");
@@ -166,7 +169,6 @@ export default function SecretariaDigital() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Coluna 1: Dados Básicos */}
             <div className="space-y-4">
               <h2 className="font-bold text-blue-700 text-xs">DADOS BÁSICOS</h2>
               <select value={sociedade} onChange={e => setSociedade(e.target.value)} className="w-full p-2 border rounded font-semibold bg-slate-50">
@@ -182,7 +184,6 @@ export default function SecretariaDigital() {
               </div>
             </div>
 
-            {/* Coluna 2: Busca de Presentes e Ausentes */}
             <div className="space-y-4">
               <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 relative">
                 <h2 className="font-bold text-blue-800 text-xs uppercase mb-2">Presentes</h2>
@@ -194,19 +195,14 @@ export default function SecretariaDigital() {
                   ))}
                 </div>
                 <input 
-                  type="text" 
-                  value={buscaPres} 
-                  onChange={e => setBuscaPres(e.target.value)} 
+                  type="text" value={buscaPres} onChange={e => setBuscaPres(e.target.value)} 
                   onKeyDown={e => { if(e.key === 'Enter') addMembro('pres', buscaPres); }}
-                  placeholder="Buscar presente (ou digite e aperte Enter)" 
-                  className="w-full p-2 text-sm border rounded"
+                  placeholder="Buscar presente (ou digite e aperte Enter)" className="w-full p-2 text-sm border rounded"
                 />
                 {buscaPres.length >= 3 && (
                   <ul className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border shadow-lg z-10 rounded">
                     {membrosIgreja.filter(m => m.toLowerCase().includes(buscaPres.toLowerCase())).map(m => (
-                      <li key={m} onClick={() => addMembro('pres', m)} className="p-2 text-sm hover:bg-blue-100 cursor-pointer border-b">
-                        {m}
-                      </li>
+                      <li key={m} onClick={() => addMembro('pres', m)} className="p-2 text-sm hover:bg-blue-100 cursor-pointer border-b">{m}</li>
                     ))}
                   </ul>
                 )}
@@ -222,29 +218,23 @@ export default function SecretariaDigital() {
                   ))}
                 </div>
                 <input 
-                  type="text" 
-                  value={buscaAus} 
-                  onChange={e => setBuscaAus(e.target.value)} 
+                  type="text" value={buscaAus} onChange={e => setBuscaAus(e.target.value)} 
                   onKeyDown={e => { if(e.key === 'Enter') addMembro('aus', buscaAus); }}
-                  placeholder="Buscar ausente (ou digite e aperte Enter)" 
-                  className="w-full p-2 text-sm border rounded"
+                  placeholder="Buscar ausente (ou digite e aperte Enter)" className="w-full p-2 text-sm border rounded"
                 />
                 {buscaAus.length >= 3 && (
                   <ul className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border shadow-lg z-10 rounded">
                     {membrosIgreja.filter(m => m.toLowerCase().includes(buscaAus.toLowerCase())).map(m => (
-                      <li key={m} onClick={() => addMembro('aus', m)} className="p-2 text-sm hover:bg-red-100 cursor-pointer border-b">
-                        {m}
-                      </li>
+                      <li key={m} onClick={() => addMembro('aus', m)} className="p-2 text-sm hover:bg-red-100 cursor-pointer border-b">{m}</li>
                     ))}
                   </ul>
                 )}
               </div>
             </div>
 
-            {/* Coluna 3: Devocional e Encerramento */}
             <div className="space-y-2">
               <h2 className="font-bold text-blue-700 text-xs uppercase">Devocional</h2>
-              {renderCampoInteligente(devocionalDirigente, setDevocionalDirigente, "Dirigente (3 letras para buscar)")}
+              {renderCampoInteligente(devocionalDirigente, setDevocionalDirigente, "Dirigente")}
               <input placeholder="Texto Bíblico" value={devocionalLeitura} onChange={e => setDevocionalLeitura(e.target.value)} className="w-full p-2 border text-sm rounded" />
               <input placeholder="Hinos" value={devocionalLouvor} onChange={e => setDevocionalLouvor(e.target.value)} className="w-full p-2 border text-sm rounded" />
               {renderCampoInteligente(devocionalOracao, setDevocionalOracao, "Oração Devocional")}
@@ -253,7 +243,7 @@ export default function SecretariaDigital() {
             </div>
           </div>
 
-          <div className="mt-6 text-black border-t pt-4">
+          <div className="mt-6 border-t pt-4">
              <h2 className="font-bold text-blue-700 text-xs mb-2 uppercase">Assuntos da Reunião</h2>
              {pautas.map((_, i) => (
                <div key={i} className="flex gap-2 mb-2">
@@ -269,12 +259,33 @@ export default function SecretariaDigital() {
           </div>
         </div>
 
-        <div className="bg-white p-12 shadow-2xl min-h-[29.7cm] print:shadow-none print:p-0">
-          <div className="text-justify text-[13pt] leading-[1.8] font-serif text-slate-800">
-            <p className="whitespace-pre-wrap">{gerarTextoPrincipal()}</p>
-            {/* O SEGREDO ESTÁ AQUI: whitespace-pre-wrap adicionado no rodapé */}
-            <p className="mt-12 text-sm text-slate-500 font-mono italic whitespace-pre-wrap">{gerarRodape()}</p>
+        {/* --- VISUALIZAÇÃO DA ATA OFICIAL A4 --- */}
+        <div className="bg-white shadow-2xl print:shadow-none mx-auto overflow-hidden relative" style={{ width: '210mm', minHeight: '297mm' }}>
+          
+          {/* Grade de Linhas Numeradas (Fundo) */}
+          <div className="absolute inset-0 z-0 pointer-events-none border-x border-black">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <div key={i} className="flex w-full border-b border-black" style={{ height: '32px' }}>
+                <div className="w-[40px] border-r border-black flex-shrink-0 flex items-center justify-center font-bold text-sm">
+                  {i + 1}
+                </div>
+                <div className="flex-1"></div>
+              </div>
+            ))}
           </div>
+
+          {/* Camada de Texto (Exatamente alinhada nas linhas) */}
+          <div className="relative z-10 pl-[50px] pr-[15px] pt-[2px]">
+            <p className="text-justify font-serif text-[13pt] text-black whitespace-pre-wrap m-0 p-0" style={{ lineHeight: '32px' }}>
+              {gerarTextoPrincipal()}
+            </p>
+            
+            {/* Notas de Rodapé, com uma quebra forçada para pular a linha da última palavra da ata */}
+            <p className="mt-[32px] text-justify font-serif text-[11pt] text-black italic whitespace-pre-wrap m-0 p-0" style={{ lineHeight: '32px' }}>
+              {gerarRodape()}
+            </p>
+          </div>
+
         </div>
       </div>
     </div>
