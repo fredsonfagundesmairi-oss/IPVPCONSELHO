@@ -92,6 +92,38 @@ export default function SecretariaDigital() {
     if (tipo === 'aus') setAusentes(ausentes.filter(n => n !== nome));
   };
 
+  // Função para criar o campo inteligente de busca rápida (apenas 1 nome)
+  const renderCampoInteligente = (valor: string, setValor: (v: string) => void, placeholder: string) => {
+    // Só mostra a lista se tiver 3 letras ou mais E se o nome ainda não estiver completo igualzinho à lista
+    const mostrarLista = valor.length >= 3 && !membrosIgreja.includes(valor);
+    const resultados = membrosIgreja.filter(m => m.toLowerCase().includes(valor.toLowerCase()));
+
+    return (
+      <div className="relative">
+        <input 
+          type="text" 
+          value={valor} 
+          onChange={e => setValor(e.target.value)} 
+          placeholder={placeholder} 
+          className="w-full p-2 border text-sm rounded bg-white"
+        />
+        {mostrarLista && resultados.length > 0 && (
+          <ul className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border shadow-xl z-20 rounded">
+            {resultados.map(m => (
+              <li 
+                key={m} 
+                onClick={() => setValor(m)} 
+                className="p-2 text-sm hover:bg-blue-100 cursor-pointer border-b"
+              >
+                {m}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
   const gerarTextoPrincipal = () => {
     const numExtenso = numeroParaExtenso(parseInt(numero)).toUpperCase();
     const dataExtenso = dataPorExtenso(data);
@@ -109,8 +141,7 @@ export default function SecretariaDigital() {
   };
 
   const gerarRodape = () => {
-    return `
-____________________________________________________
+    return `____________________________________________________
 [1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero}) - Número, data e hora da reunião por extenso.
 [2] QUÓRUM - Registro dos presentes (${numeroParaExtenso(presentes.length)}) e ausências (${numeroParaExtenso(ausentes.length)}).
 [3] DEVOCIONAL - Momento de liturgia, leitura e oração.
@@ -128,7 +159,7 @@ ____________________________________________________
             <div className="space-x-2">
               <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Imprimir PDF</button>
               <button onClick={() => {
-                navigator.clipboard.writeText(gerarTextoPrincipal() + "\n" + gerarRodape());
+                navigator.clipboard.writeText(gerarTextoPrincipal() + "\n\n" + gerarRodape());
                 alert("Ata copiada!");
               }} className="bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700">Copiar Texto</button>
             </div>
@@ -153,7 +184,6 @@ ____________________________________________________
 
             {/* Coluna 2: Busca de Presentes e Ausentes */}
             <div className="space-y-4">
-              {/* PRESENTES */}
               <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 relative">
                 <h2 className="font-bold text-blue-800 text-xs uppercase mb-2">Presentes</h2>
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -182,7 +212,6 @@ ____________________________________________________
                 )}
               </div>
 
-              {/* AUSENTES */}
               <div className="bg-red-50 p-3 rounded-lg border border-red-100 relative">
                 <h2 className="font-bold text-red-800 text-xs uppercase mb-2">Ausentes</h2>
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -212,15 +241,15 @@ ____________________________________________________
               </div>
             </div>
 
-            {/* Coluna 3: Devocional */}
+            {/* Coluna 3: Devocional e Encerramento */}
             <div className="space-y-2">
               <h2 className="font-bold text-blue-700 text-xs uppercase">Devocional</h2>
-              <input placeholder="Dirigente" value={devocionalDirigente} onChange={e => setDevocionalDirigente(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              {renderCampoInteligente(devocionalDirigente, setDevocionalDirigente, "Dirigente (3 letras para buscar)")}
               <input placeholder="Texto Bíblico" value={devocionalLeitura} onChange={e => setDevocionalLeitura(e.target.value)} className="w-full p-2 border text-sm rounded" />
               <input placeholder="Hinos" value={devocionalLouvor} onChange={e => setDevocionalLouvor(e.target.value)} className="w-full p-2 border text-sm rounded" />
-              <input placeholder="Oração" value={devocionalOracao} onChange={e => setDevocionalOracao(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              {renderCampoInteligente(devocionalOracao, setDevocionalOracao, "Oração Devocional")}
               <h2 className="font-bold text-blue-700 text-xs mt-4 uppercase">Encerramento</h2>
-              <input placeholder="Oração Final" value={oracaoFinal} onChange={e => setOracaoFinal(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              {renderCampoInteligente(oracaoFinal, setOracaoFinal, "Oração Final")}
             </div>
           </div>
 
@@ -240,11 +269,11 @@ ____________________________________________________
           </div>
         </div>
 
-        {/* Visualização da Ata */}
         <div className="bg-white p-12 shadow-2xl min-h-[29.7cm] print:shadow-none print:p-0">
           <div className="text-justify text-[13pt] leading-[1.8] font-serif text-slate-800">
             <p className="whitespace-pre-wrap">{gerarTextoPrincipal()}</p>
-            <p className="mt-12 text-sm text-slate-500 font-mono italic">{gerarRodape()}</p>
+            {/* O SEGREDO ESTÁ AQUI: whitespace-pre-wrap adicionado no rodapé */}
+            <p className="mt-12 text-sm text-slate-500 font-mono italic whitespace-pre-wrap">{gerarRodape()}</p>
           </div>
         </div>
       </div>
