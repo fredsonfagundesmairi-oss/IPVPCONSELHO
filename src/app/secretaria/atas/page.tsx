@@ -133,18 +133,13 @@ export default function SecretariaDigital() {
       
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* Esconde absolutamente tudo na tela */
           body * { visibility: hidden !important; }
           #documento-oficial, #documento-oficial * { visibility: visible !important; }
-          
-          /* Reseta o fundo do site */
           html, body { 
             background: white !important; 
             margin: 0 !important; 
             padding: 0 !important;
           }
-
-          /* Coloca a folha no topo exato da impressora */
           #documento-oficial { 
             position: absolute !important; 
             left: 0 !important; 
@@ -154,8 +149,6 @@ export default function SecretariaDigital() {
             box-shadow: none !important;
             margin: 0 !important;
           }
-
-          /* Tira as margens padrões da impressora, pois nós desenhamos elas no código */
           @page { size: A4; margin: 0; }
         }
       `}} />
@@ -214,41 +207,37 @@ export default function SecretariaDigital() {
         </div>
       </div>
 
-      {/* ÁREA DO DOCUMENTO OFICIAL A4 (O que vai pro papel) */}
+      {/* ÁREA DO DOCUMENTO OFICIAL A4 */}
       <div id="documento-oficial" className="bg-white mx-auto shadow-2xl relative" style={{ width: '210mm', height: '297mm' }}>
         
-        {/* Cabeçalho: Número da Página isolado (Tamanho 12, topo direito) */}
+        {/* Cabeçalho: Número da Página isolado */}
         <div className="absolute top-[1.5cm] right-[2cm] font-sans text-[12pt] font-bold">
           {pagina}
         </div>
 
-        {/* Coluna Lateral Esquerda: Numeração das Linhas */}
-        <div className="absolute left-[0.5cm] top-[3cm] bottom-[5cm] w-[2cm] text-right pr-2 text-black font-bold font-sans opacity-80" style={{ lineHeight: '8mm' }}>
-          {Array.from({ length: 35 }).map((_, i) => (
+        {/* Coluna Lateral Esquerda: Numeração das Linhas - Limitado exato a 27 linhas para não cruzar o rodapé */}
+        <div className="absolute left-[0.5cm] top-[3cm] bottom-[5.1cm] w-[2cm] text-right pr-2 text-black font-bold font-sans opacity-80 overflow-hidden" style={{ lineHeight: '8mm' }}>
+          {Array.from({ length: 27 }).map((_, i) => (
             <div key={i}>{i + 1}</div>
           ))}
         </div>
 
         {/* Corpo Principal (Texto + Linhas Contínuas de Preenchimento) */}
-        {/* Usamos overflow-hidden para que as linhas não desçam além da área limite */}
-        <div className="absolute left-[3cm] right-[2cm] top-[3cm] bottom-[5cm] overflow-hidden text-justify font-serif text-[13pt] text-black" style={{ lineHeight: '8mm' }}>
+        <div className="absolute left-[3cm] right-[2cm] top-[3cm] bottom-[5.1cm] overflow-hidden text-justify font-serif text-[13pt] text-black" style={{ lineHeight: '8mm' }}>
           
           <span className="whitespace-pre-wrap">
             {gerarTextoPrincipal()}
           </span>
 
-          {/* O segredo da Linha Contínua Mágica: 
-              Ela é anexada imediatamente APÓS o texto. Como usamos letter-spacing negativo, 
-              os underscores (underline) formam uma linha sólida preta que flui até encher a página, 
-              mas NUNCA ficam atrás do texto. */}
-          <span className="tracking-tighter">
+          {/* O uso do break-all garante que a linha de preenchimento desça acompanhando a quebra do texto */}
+          <span className="break-all tracking-tighter">
             {''.padEnd(3000, '_')}
           </span>
 
         </div>
 
-        {/* Rodapé Fixo (Tamanho 11, Espaçamento Simples, preso na margem inferior) */}
-        <div className="absolute left-[3cm] right-[2cm] bottom-[2cm] text-[11pt] leading-[1.0] italic text-justify text-black font-serif">
+        {/* Rodapé Fixo - Fonte normal (não itálico), ajustada, tam 11 */}
+        <div className="absolute left-[3cm] right-[2cm] bottom-[2cm] text-[11pt] leading-tight text-justify text-black font-serif font-normal not-italic">
           {gerarRodape().split('\n').map((linha, index) => (
             <p key={index} className="m-0 p-0">{linha}</p>
           ))}
