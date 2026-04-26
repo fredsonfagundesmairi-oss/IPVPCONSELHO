@@ -1,4 +1,3 @@
-// app/login/page.tsx
 "use client";
 
 import { useState } from 'react';
@@ -12,13 +11,15 @@ export default function LoginPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Defina sua senha mestra aqui (ou use variáveis de ambiente da Vercel)
-    const SENHA_MESTRA = "IPVP2026"; 
+    // Senha atualizada conforme solicitado
+    const SENHA_MESTRA = "ipvpsec"; 
 
     if (password === SENHA_MESTRA) {
-      // Cria um cookie simples que expira em 24h
+      // Cria o cookie de autenticação válido por 24h
       document.cookie = "ipvp_auth=true; path=/; max-age=86400; SameSite=Strict";
-      router.push('/secretaria');
+      
+      // Redireciona para o caminho correto onde está sua página de atas
+      router.push('/secretaria/atas');
     } else {
       setError('Senha incorreta. Tente novamente.');
     }
@@ -38,7 +39,7 @@ export default function LoginPage() {
             <input
               type="password"
               required
-              className="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
