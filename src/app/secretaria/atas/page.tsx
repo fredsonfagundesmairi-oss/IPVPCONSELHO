@@ -96,18 +96,13 @@ export default function SecretariaDigital() {
     return (
       <div className="relative">
         <input 
-          type="text" 
-          value={valor} 
-          onChange={e => setValor(e.target.value)} 
-          placeholder={placeholder} 
-          className="w-full p-2 border text-sm rounded bg-white"
+          type="text" value={valor} onChange={e => setValor(e.target.value)} 
+          placeholder={placeholder} className="w-full p-2 border text-sm rounded bg-white"
         />
         {mostrarLista && resultados.length > 0 && (
           <ul className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border shadow-xl z-20 rounded">
             {resultados.map(m => (
-              <li key={m} onClick={() => setValor(m)} className="p-2 text-sm hover:bg-blue-100 cursor-pointer border-b">
-                {m}
-              </li>
+              <li key={m} onClick={() => setValor(m)} className="p-2 text-sm hover:bg-blue-100 cursor-pointer border-b">{m}</li>
             ))}
           </ul>
         )}
@@ -128,7 +123,10 @@ export default function SecretariaDigital() {
     const secretario = sociedade === 'SAF' ? 'Jucirene Lopes da Silva Cunha' : 'Adevaldo Marques Rios';
     const cargoSec = sociedade === 'SAF' ? 'Primeira Secretária' : 'Secretário';
 
-    return `ATA ${numExtenso} (${numero}) DA REUNIÃO DO ${sociedade.toUpperCase()} DA IGREJA PRESBITERIANA DE VÁRZEA DO POÇO – BA[1]. Aos ${dataExtenso}, às ${horaExtenso}, reuniu-se o ${sociedade === 'Conselho' ? 'Conselho' : sociedade} da Igreja Presbiteriana de Várzea do Poço – BA, no templo situado à Avenida Dr. Durval Gama, nº 17, Centro. QUÓRUM[2]: ${quorumText} Ficando assim caracterizado o quórum regimental para a realização dos trabalhos. DEVOCIONAL[3]: A devocional foi conduzida por ${devocionalDirigente || '__________'}, com a leitura bíblica em ${devocionalLeitura || '__________'}, entoando-se os louvores ${devocionalLouvor || '__________'} e oração proferida por ${devocionalOracao || '__________'}. Em seguida, a presidência passou a palavra ao secretário para a leitura da ata anterior, a qual foi aprovada. PAUTA E RESOLUÇÕES[4]: Passou-se às pautas e deliberações: ${pautas.map((p, i) => `${i + 1}- ${p}. Resolução: ${resolucoes[i]}`).join('; ')}. ENCERRAMENTO[5]: Nada mais havendo a tratar, a reunião foi encerrada às ${horaPorExtenso(horaFim)}, com oração proferida por ${oracaoFinal || '__________'}. Eu, ${secretario}, ${cargoSec}, lavrei a presente ata, que será devidamente assinada.`;
+    // A linha de fechamento para inutilizar o restante do espaço em branco
+    const linhaFechamento = "_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________";
+
+    return `ATA ${numExtenso} (${numero}) DA REUNIÃO DO ${sociedade.toUpperCase()} DA IGREJA PRESBITERIANA DE VÁRZEA DO POÇO – BA[1]. Aos ${dataExtenso}, às ${horaExtenso}, reuniu-se o ${sociedade === 'Conselho' ? 'Conselho' : sociedade} da Igreja Presbiteriana de Várzea do Poço – BA, no templo situado à Avenida Dr. Durval Gama, nº 17, Centro. QUÓRUM[2]: ${quorumText} Ficando assim caracterizado o quórum regimental para a realização dos trabalhos. DEVOCIONAL[3]: A devocional foi conduzida por ${devocionalDirigente || '__________'}, com a leitura bíblica em ${devocionalLeitura || '__________'}, entoando-se os louvores ${devocionalLouvor || '__________'} e oração proferida por ${devocionalOracao || '__________'}. Em seguida, a presidência passou a palavra ao secretário para a leitura da ata anterior, a qual foi aprovada. PAUTA E RESOLUÇÕES[4]: Passou-se às pautas e deliberações: ${pautas.map((p, i) => `${i + 1}- ${p}. Resolução: ${resolucoes[i]}`).join('; ')}. ENCERRAMENTO[5]: Nada mais havendo a tratar, a reunião foi encerrada às ${horaPorExtenso(horaFim)}, com oração proferida por ${oracaoFinal || '__________'}. Eu, ${secretario}, ${cargoSec}, lavrei a presente ata, que será devidamente assinada. ${linhaFechamento}`;
   };
 
   const gerarRodape = () => {
@@ -140,27 +138,37 @@ export default function SecretariaDigital() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 print:bg-white text-black font-sans">
+    <div className="min-h-screen bg-slate-100 font-sans text-black">
       
-      {/* Estilo CSS exclusivo para garantir que a impressão fique perfeita */}
+      {/* Força Bruta CSS: Esconde TUDO na tela de impressão, exceto a ata */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
+          body * {
+            visibility: hidden;
+          }
+          #area-de-impressao, #area-de-impressao * {
+            visibility: visible;
+          }
+          #area-de-impressao {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+          }
           .no-print { display: none !important; }
-          .only-print { display: block !important; }
-          @page { size: A4; margin: 20mm; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
       `}} />
 
-      <div className="max-w-5xl mx-auto p-4 md:p-8 print:p-0 space-y-6">
+      <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
         
-        {/* Painel de Edição - Oculto na Impressão (.no-print) */}
+        {/* Painel de Edição - Oculto na Impressão */}
         <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 no-print">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
             <h1 className="text-xl font-bold">Escrivão Digital IPVP</h1>
             <div className="space-x-2">
-              <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">🖨️ Imprimir Ata Oficial</button>
+              <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold">🖨️ Imprimir Ata Oficial</button>
               <button onClick={() => {
                 navigator.clipboard.writeText(gerarTextoPrincipal() + "\n\n" + gerarRodape());
                 alert("Ata copiada!");
@@ -194,11 +202,7 @@ export default function SecretariaDigital() {
                     </span>
                   ))}
                 </div>
-                <input 
-                  type="text" value={buscaPres} onChange={e => setBuscaPres(e.target.value)} 
-                  onKeyDown={e => { if(e.key === 'Enter') addMembro('pres', buscaPres); }}
-                  placeholder="Buscar presente (ou digite e aperte Enter)" className="w-full p-2 text-sm border rounded"
-                />
+                <input type="text" value={buscaPres} onChange={e => setBuscaPres(e.target.value)} onKeyDown={e => { if(e.key === 'Enter') addMembro('pres', buscaPres); }} placeholder="Buscar presente..." className="w-full p-2 text-sm border rounded" />
                 {buscaPres.length >= 3 && (
                   <ul className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border shadow-lg z-10 rounded">
                     {membrosIgreja.filter(m => m.toLowerCase().includes(buscaPres.toLowerCase())).map(m => (
@@ -217,11 +221,7 @@ export default function SecretariaDigital() {
                     </span>
                   ))}
                 </div>
-                <input 
-                  type="text" value={buscaAus} onChange={e => setBuscaAus(e.target.value)} 
-                  onKeyDown={e => { if(e.key === 'Enter') addMembro('aus', buscaAus); }}
-                  placeholder="Buscar ausente (ou digite e aperte Enter)" className="w-full p-2 text-sm border rounded"
-                />
+                <input type="text" value={buscaAus} onChange={e => setBuscaAus(e.target.value)} onKeyDown={e => { if(e.key === 'Enter') addMembro('aus', buscaAus); }} placeholder="Buscar ausente..." className="w-full p-2 text-sm border rounded" />
                 {buscaAus.length >= 3 && (
                   <ul className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border shadow-lg z-10 rounded">
                     {membrosIgreja.filter(m => m.toLowerCase().includes(buscaAus.toLowerCase())).map(m => (
@@ -259,33 +259,33 @@ export default function SecretariaDigital() {
           </div>
         </div>
 
-        {/* --- VISUALIZAÇÃO DA ATA OFICIAL A4 --- */}
-        <div className="bg-white shadow-2xl print:shadow-none mx-auto overflow-hidden relative" style={{ width: '210mm', minHeight: '297mm' }}>
+        {/* --- ÁREA EXCLUSIVA DE IMPRESSÃO --- */}
+        <div id="area-de-impressao" className="bg-white mx-auto shadow-2xl print:shadow-none mt-8" style={{ width: '210mm', minHeight: '297mm', padding: '20mm', paddingLeft: '10mm' }}>
           
-          {/* Grade de Linhas Numeradas (Fundo) */}
-          <div className="absolute inset-0 z-0 pointer-events-none border-x border-black">
-            {Array.from({ length: 35 }).map((_, i) => (
-              <div key={i} className="flex w-full border-b border-black" style={{ height: '32px' }}>
-                <div className="w-[40px] border-r border-black flex-shrink-0 flex items-center justify-center font-bold text-sm">
-                  {i + 1}
-                </div>
-                <div className="flex-1"></div>
-              </div>
-            ))}
-          </div>
-
-          {/* Camada de Texto (Exatamente alinhada nas linhas) */}
-          <div className="relative z-10 pl-[50px] pr-[15px] pt-[2px]">
-            <p className="text-justify font-serif text-[13pt] text-black whitespace-pre-wrap m-0 p-0" style={{ lineHeight: '32px' }}>
-              {gerarTextoPrincipal()}
-            </p>
+          <div className="relative font-serif text-[13pt] text-black">
             
-            {/* Notas de Rodapé, com uma quebra forçada para pular a linha da última palavra da ata */}
-            <p className="mt-[32px] text-justify font-serif text-[11pt] text-black italic whitespace-pre-wrap m-0 p-0" style={{ lineHeight: '32px' }}>
-              {gerarRodape()}
-            </p>
-          </div>
+            {/* Coluna de Números (Margem Esquerda) - Sem bordas, apenas números */}
+            <div className="absolute left-0 top-0 bottom-0 w-[40px] text-right pr-3 select-none text-black font-bold font-sans opacity-80 z-0">
+              {Array.from({ length: 150 }).map((_, i) => (
+                <div key={i} style={{ height: '32px', lineHeight: '32px' }}>{i + 1}</div>
+              ))}
+            </div>
 
+            {/* Texto da Ata Alinhado com os Números */}
+            <div className="pl-[50px] relative z-10 text-justify" style={{ lineHeight: '32px' }}>
+              
+              {/* Texto Principal com quebra automática e linha de preenchimento no fim */}
+              <p className="whitespace-pre-wrap m-0 p-0">
+                {gerarTextoPrincipal()}
+              </p>
+              
+              {/* Rodapé pulando uma linha */}
+              <p className="mt-[32px] whitespace-pre-wrap italic m-0 p-0 font-mono text-[11pt]">
+                {gerarRodape()}
+              </p>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
