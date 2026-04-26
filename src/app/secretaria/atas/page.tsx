@@ -204,6 +204,22 @@ export default function SecretariaDigital() {
               {renderCampoInteligente(oracaoFinal, setOracaoFinal, "Oração Final")}
             </div>
           </div>
+
+          {/* O BLOCO DE PAUTAS VOLTOU PARA CÁ! */}
+          <div className="mt-6 border-t pt-4 text-black">
+             <h2 className="font-bold text-blue-700 text-xs mb-2 uppercase">Pautas e Resoluções</h2>
+             {pautas.map((_, i) => (
+               <div key={i} className="flex gap-2 mb-2">
+                 <input placeholder={`Pauta ${i+1}`} value={pautas[i]} onChange={e => {
+                   const n = [...pautas]; n[i] = e.target.value; setPautas(n);
+                 }} className="w-1/2 p-2 border rounded text-sm" />
+                 <input placeholder={`Resolução ${i+1}`} value={resolucoes[i]} onChange={e => {
+                   const n = [...resolucoes]; n[i] = e.target.value; setResolucoes(n);
+                 }} className="w-1/2 p-2 border rounded text-sm" />
+               </div>
+             ))}
+             <button onClick={() => {setPautas([...pautas, '']); setResolucoes([...resolucoes, ''])}} className="text-blue-600 text-xs font-bold">+ Adicionar Assunto</button>
+          </div>
         </div>
       </div>
 
