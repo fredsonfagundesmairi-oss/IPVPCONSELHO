@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, Footer, PageOrientation } from "docx";
-import { saveAs } from "file-saver";
 
-// Conversão por extenso
+// Funções de conversão por extenso
 const numeroParaExtenso = (n: number, feminino = false) => {
   const unidades = ["zero", feminino ? "uma" : "um", feminino ? "duas" : "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
   const dezenas = ["", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
@@ -46,6 +44,7 @@ const membrosIgreja = [
 export default function SecretariaDigital() {
   const [sociedade, setSociedade] = useState('Conselho');
   const [numero, setNumero] = useState('212');
+  const [pagina, setPagina] = useState('01');
   const [data, setData] = useState('');
   const [horaInício, setHoraInício] = useState('');
   const [horaFim, setHoraFim] = useState('');
@@ -66,8 +65,7 @@ export default function SecretariaDigital() {
       setPresentes(["Pr. Fredson Fagundes Cerqueira", "Pb. Elique Rios Filho", "Pb. Adevaldo Marques Rios"]);
       setAusentes([]);
     } else {
-      setPresentes([]);
-      setAusentes([]);
+      setPresentes([]); setAusentes([]);
     }
   }, [sociedade]);
 
@@ -102,128 +100,149 @@ export default function SecretariaDigital() {
     const secretario = sociedade === 'SAF' ? 'Jucirene Lopes da Silva Cunha' : 'Adevaldo Marques Rios';
     const cargoSec = sociedade === 'SAF' ? 'Primeira Secretária' : 'Secretário';
 
-    return `ATA ${numExtenso} (${numero}) DA REUNIÃO DO ${sociedade.toUpperCase()} DA IGREJA PRESBITERIANA DE VÁRZEA DO POÇO – BA. Aos ${dataExtenso}, às ${horaExtenso}, reuniu-se o ${sociedade === 'Conselho' ? 'Conselho' : sociedade} da Igreja Presbiteriana de Várzea do Poço – BA, no templo situado à Avenida Dr. Durval Gama, nº 17, Centro. QUÓRUM: ${quorumText} Ficando assim caracterizado o quórum regimental para a realização dos trabalhos. DEVOCIONAL: A devocional foi conduzida por ${devocionalDirigente || '__________'}, com a leitura bíblica em ${devocionalLeitura || '__________'}, entoando-se os louvores ${devocionalLouvor || '__________'} e oração proferida por ${devocionalOracao || '__________'}. Em seguida, a presidência passou a palavra ao secretário para a leitura da ata anterior, a qual foi aprovada. PAUTA E RESOLUÇÕES: Passou-se às pautas e deliberações: ${pautas.map((p, i) => `${i + 1}- ${p}. Resolução: ${resolucoes[i]}`).join('; ')}. ENCERRAMENTO: Nada mais havendo a tratar, a reunião foi encerrada às ${horaPorExtenso(horaFim)}, com oração proferida por ${oracaoFinal || '__________'}. Eu, ${secretario}, ${cargoSec}, lavrei a presente ata, que será devidamente assinada.`;
+    return `ATA ${numExtenso} (${numero}) DA REUNIÃO DO ${sociedade.toUpperCase()} DA IGREJA PRESBITERIANA DE VÁRZEA DO POÇO – BA. Aos ${dataExtenso}, às ${horaExtenso}, reuniu-se o ${sociedade === 'Conselho' ? 'Conselho' : sociedade} da Igreja Presbiteriana de Várzea do Poço – BA, no templo situado à Avenida Dr. Durval Gama, nº 17, Centro. QUÓRUM: ${quorumText} Ficando assim caracterizado o quórum regimental para a realização dos trabalhos. DEVOCIONAL: A devocional foi conduzida por ${devocionalDirigente || '__________'}, com a leitura bíblica em ${devocionalLeitura || '__________'}, entoando-se os louvores ${devocionalLouvor || '__________'} e oração proferida por ${devocionalOracao || '__________'}. Em seguida, a presidência passou a palavra ao secretário para a leitura da ata anterior, a qual foi aprovada. PAUTA E RESOLUÇÕES: Passou-se às pautas e deliberações: ${pautas.map((p, i) => `${i + 1}- ${p}. Resolução: ${resolucoes[i]}`).join('; ')}. ENCERRAMENTO: Nada mais havendo a tratar, a reunião foi encerrada às ${horaPorExtenso(horaFim)}, com oração proferida por ${oracaoFinal || '__________'}. Eu, ${secretario}, ${cargoSec}, lavrei a presente ata, que será devidamente assinada. `;
   };
 
-  const exportarWord = () => {
-    const doc = new Document({
-      sections: [{
-        properties: {
-          page: { margin: { top: "3cm", left: "3cm", right: "2cm", bottom: "2cm" } }
-        },
-        children: [
-          new Paragraph({
-            children: [new TextRun({ text: gerarTextoPrincipal(), size: "13pt", font: "Times New Roman" })],
-            alignment: AlignmentType.JUSTIFIED,
-            spacing: { line: 480 }
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: "________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________", color: "888888" })],
-          })
-        ],
-        footers: {
-          default: new Footer({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: `[1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero})\n[2] QUÓRUM (${presentes.length} presentes)\n[3] DEVOCIONAL | [4] PAUTA | [5] ENCERRAMENTO`, size: "11pt", font: "Times New Roman", italic: true })],
-                alignment: AlignmentType.JUSTIFIED,
-              })
-            ]
-          })
-        }
-      }]
-    });
-    Packer.toBlob(doc).then(blob => { saveAs(blob, `Ata_${numero}.docx`); });
+  const gerarRodape = () => {
+    return `[1] ATA nº ${numeroParaExtenso(parseInt(numero))} (${numero}) - Número, data e hora por extenso.\n[2] QUÓRUM - Registro dos presentes (${presentes.length}) e ausências (${ausentes.length}).\n[3] DEVOCIONAL | [4] PAUTA | [5] ENCERRAMENTO.`;
+  };
+
+  // Função para baixar o DOCX de forma compatível
+  const baixarDocx = () => {
+    const conteudo = `Página: ${pagina}\n\n${gerarTextoPrincipal()}\n\n${gerarRodape()}`;
+    const blob = new Blob([conteudo], { type: 'application/msword' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Ata_${numero}.doc`;
+    link.click();
   };
 
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white text-black">
+      
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body * { visibility: hidden; }
-          #documento-oficial, #documento-oficial * { visibility: visible; }
-          #documento-oficial { position: absolute; left: 0; top: 0; width: 100%; }
-          @page { size: A4; margin-top: 3cm; margin-bottom: 2cm; margin-left: 3cm; margin-right: 2cm; }
-          .no-print { display: none !important; }
+          /* Esconde absolutamente TUDO que não seja o documento oficial */
+          body * { visibility: hidden !important; }
+          #documento-oficial, #documento-oficial * { visibility: visible !important; }
+          
+          /* Remove margens e fundos do site e da barra lateral */
+          html, body, main, aside, nav, header { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            background: white !important; 
+            width: 100% !important;
+            display: block !important;
+          }
+
+          /* Posiciona o documento no topo absoluto da folha */
+          #documento-oficial { 
+            position: absolute !important; 
+            left: 0 !important; 
+            top: 0 !important; 
+            width: 210mm !important; 
+            box-shadow: none !important;
+          }
+
+          /* Configuração da Página A4 */
+          @page { 
+            size: A4; 
+            margin-top: 3cm; 
+            margin-bottom: 2cm; 
+            margin-left: 3cm; 
+            margin-right: 2cm; 
+          }
+
+          /* Garante que os números das linhas apareçam */
+          .line-num { visibility: visible !important; }
         }
       `}} />
 
       <div className="max-w-5xl mx-auto p-4 no-print">
-        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 mb-6">
+        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 mb-6 text-black">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
             <h1 className="text-xl font-bold">Escrivão Digital IPVP</h1>
             <div className="space-x-2">
               <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">🖨️ Imprimir</button>
-              <button onClick={exportarWord} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">📄 DOCX</button>
+              <button onClick={baixarDocx} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">📄 Baixar DOCX</button>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-4">
-              <h2 className="font-bold text-blue-700 text-xs uppercase text-black">Dados</h2>
-              <select value={sociedade} onChange={e => setSociedade(e.target.value)} className="w-full p-2 border rounded bg-slate-50 text-black">
+            <div className="space-y-4 text-black">
+              <h2 className="font-bold text-blue-700 text-xs uppercase">Dados Básicos</h2>
+              <select value={sociedade} onChange={e => setSociedade(e.target.value)} className="w-full p-2 border rounded font-semibold bg-slate-50">
                 <option value="Conselho">Conselho</option>
                 <option value="UPH">UPH</option>
                 <option value="SAF">SAF</option>
               </select>
-              <input type="number" value={numero} onChange={e => setNumero(e.target.value)} className="w-full p-2 border rounded text-black" />
-              <input type="date" value={data} onChange={e => setData(e.target.value)} className="w-full p-2 border rounded text-black" />
               <div className="flex gap-2">
-                <input type="time" value={horaInício} onChange={e => setHoraInício(e.target.value)} className="w-1/2 p-2 border rounded text-black" />
-                <input type="time" value={horaFim} onChange={e => setHoraFim(e.target.value)} className="w-1/2 p-2 border rounded text-black" />
+                <input type="number" value={numero} onChange={e => setNumero(e.target.value)} className="w-1/2 p-2 border rounded" placeholder="Nº Ata" />
+                <input type="text" value={pagina} onChange={e => setPagina(e.target.value)} className="w-1/2 p-2 border rounded" placeholder="Página" />
+              </div>
+              <input type="date" value={data} onChange={e => setData(e.target.value)} className="w-full p-2 border rounded" />
+              <div className="flex gap-2">
+                <input type="time" value={horaInício} onChange={e => setHoraInício(e.target.value)} className="w-1/2 p-2 border rounded" />
+                <input type="time" value={horaFim} onChange={e => setHoraFim(e.target.value)} className="w-1/2 p-2 border rounded" />
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="font-bold text-blue-700 text-xs uppercase text-black">Presenças</h2>
-              <input type="text" value={buscaPres} onChange={e => setBuscaPres(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMembro('pres', buscaPres)} placeholder="Buscar presente..." className="w-full p-2 text-sm border rounded text-black" />
+            <div className="space-y-4 text-black">
+              <h2 className="font-bold text-blue-700 text-xs uppercase">Quórum</h2>
+              <input type="text" value={buscaPres} onChange={e => setBuscaPres(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMembro('pres', buscaPres)} placeholder="Adicionar presente..." className="w-full p-2 text-sm border rounded" />
               <div className="flex flex-wrap gap-1">
                 {presentes.map(n => <span key={n} className="bg-blue-100 text-blue-800 text-[10px] px-2 py-1 rounded flex items-center">{n} <button onClick={() => setPresentes(presentes.filter(x => x !== n))} className="ml-1 font-bold">×</button></span>)}
               </div>
-              <h2 className="font-bold text-red-700 text-xs uppercase text-black text-black">Ausentes</h2>
-              <input type="text" value={buscaAus} onChange={e => setBuscaAus(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMembro('aus', buscaAus)} placeholder="Buscar ausente..." className="w-full p-2 text-sm border rounded text-black" />
+              <input type="text" value={buscaAus} onChange={e => setBuscaAus(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMembro('aus', buscaAus)} placeholder="Adicionar ausente..." className="w-full p-2 text-sm border rounded" />
               <div className="flex flex-wrap gap-1">
                 {ausentes.map(n => <span key={n} className="bg-red-100 text-red-800 text-[10px] px-2 py-1 rounded flex items-center">{n} <button onClick={() => setAusentes(ausentes.filter(x => x !== n))} className="ml-1 font-bold">×</button></span>)}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <h2 className="font-bold text-blue-700 text-xs uppercase text-black">Devocional</h2>
+            <div className="space-y-2 text-black">
+              <h2 className="font-bold text-blue-700 text-xs uppercase">Liturgia</h2>
               {renderCampoInteligente(devocionalDirigente, setDevocionalDirigente, "Dirigente")}
-              <input placeholder="Texto Bíblico" value={devocionalLeitura} onChange={e => setDevocionalLeitura(e.target.value)} className="w-full p-2 border text-sm rounded text-black" />
-              <input placeholder="Hinos" value={devocionalLouvor} onChange={e => setDevocionalLouvor(e.target.value)} className="w-full p-2 border text-sm rounded text-black" />
-              {renderCampoInteligente(devocionalOracao, setDevocionalOracao, "Oração Devocional")}
-              <h2 className="font-bold text-blue-700 text-xs mt-2 uppercase text-black">Fim</h2>
+              <input placeholder="Leitura Bíblica" value={devocionalLeitura} onChange={e => setDevocionalLeitura(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              <input placeholder="Louvor" value={devocionalLouvor} onChange={e => setDevocionalLouvor(e.target.value)} className="w-full p-2 border text-sm rounded" />
+              {renderCampoInteligente(devocionalOracao, setDevocionalOracao, "Oração Inicial")}
               {renderCampoInteligente(oracaoFinal, setOracaoFinal, "Oração Final")}
             </div>
-          </div>
-
-          <div className="mt-4 border-t pt-4">
-             {pautas.map((_, i) => (
-               <div key={i} className="flex gap-2 mb-2">
-                 <input placeholder={`Pauta ${i+1}`} value={pautas[i]} onChange={e => { const n = [...pautas]; n[i] = e.target.value; setPautas(n); }} className="w-1/2 p-2 border rounded text-sm text-black" />
-                 <input placeholder={`Resolução ${i+1}`} value={resolucoes[i]} onChange={e => { const n = [...resolucoes]; n[i] = e.target.value; setResolucoes(n); }} className="w-1/2 p-2 border rounded text-sm text-black" />
-               </div>
-             ))}
-             <button onClick={() => { setPautas([...pautas, '']); setResolucoes([...resolucoes, '']); }} className="text-blue-600 text-xs font-bold">+ Adicionar Assunto</button>
           </div>
         </div>
       </div>
 
-      <div id="documento-oficial" className="bg-white mx-auto shadow-2xl relative overflow-hidden" style={{ width: '210mm', minHeight: '297mm' }}>
-        <div className="relative font-serif text-[13pt] text-black text-justify" style={{ lineHeight: '30px', margin: '3cm 2cm 2cm 3cm' }}>
-          {Array.from({ length: 30 }).map((_, i) => (
-            <div key={i} className="relative w-full" style={{ height: '30px' }}>
-              <span className="absolute left-[-2.5cm] w-[2cm] text-center font-bold font-sans">{i + 1}</span>
-              <div className="absolute inset-0 pointer-events-none text-slate-200 opacity-50 z-0">________________________________________________________________________________________</div>
-            </div>
-          ))}
-          <div className="absolute top-0 left-0 right-0 z-10 whitespace-pre-wrap">{gerarTextoPrincipal()}</div>
+      {/* ÁREA DO DOCUMENTO OFICIAL A4 */}
+      <div id="documento-oficial" className="bg-white mx-auto shadow-2xl relative" style={{ width: '210mm', minHeight: '297mm' }}>
+        
+        {/* Número da Página no Cabeçalho */}
+        <div className="absolute top-[1cm] right-[2cm] font-sans text-[12pt] font-bold">
+          Página: {pagina}
         </div>
-        <div className="absolute bottom-[2cm] left-[3cm] right-[2cm] font-serif italic text-[11pt] leading-[1.0] text-black">
-          <p>[1] ATA nº {numeroParaExtenso(parseInt(numero))} ({numero}) - Nº, data e hora por extenso.</p>
-          <p>[2] QUÓRUM - Registro dos presentes ({presentes.length}) e ausências ({ausentes.length}).</p>
-          <p>[3] DEVOCIONAL | [4] PAUTA | [5] ENCERRAMENTO.</p>
+
+        {/* Corpo do Texto e Linhas */}
+        <div className="relative font-serif text-[13pt] text-black text-justify" style={{ lineHeight: '32px', padding: '3cm 2cm 2cm 3cm' }}>
+          
+          {/* Numeração de Linhas na Margem Esquerda */}
+          <div className="absolute left-0 top-[3cm] bottom-[2cm] w-[3cm] text-right pr-4 text-black font-bold opacity-80 z-0">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <div key={i} className="line-num" style={{ height: '32px', lineHeight: '32px' }}>{i + 1}</div>
+            ))}
+          </div>
+
+          {/* O Texto da Ata */}
+          <div className="relative z-10 whitespace-pre-wrap">
+            {gerarTextoPrincipal()}
+            
+            {/* Linhas Contínuas (Somente após o texto) */}
+            <span className="text-slate-300 opacity-50">
+              {Array.from({ length: 400 }).map(() => '_').join('')}
+            </span>
+          </div>
+
+          {/* Rodapé (Tamanho 11, Espaçamento 1.0) */}
+          <div className="mt-8 text-[11pt] leading-[1.0] italic whitespace-pre-wrap">
+            {gerarRodape()}
+          </div>
         </div>
       </div>
     </div>
